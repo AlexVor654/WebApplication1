@@ -1,0 +1,109 @@
+﻿@{
+    ViewBag.Title = "AllReq";
+    Layout = "/Views/Shared/User_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+</head>
+<body>
+    <h2>All Requests</h2>
+    <div id="userInfoContainer"></div> <!-- Контейнер для вывода данных -->
+    
+    <table class="table table-bordered" id="dataTable">
+        <thead>
+            <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("CreatesReq", "User")" class="btn btn-success col-6 mx-auto">Create Request</a>
+    </div>
+    
+    
+    <script>
+        $(document).ready(function () {
+            // Выполняем AJAX запрос
+            $.ajax({
+                url: 'AllUserReq', // Убедитесь, что путь к вашему методу правильный
+                contentType: 'application/x-www-form-urlencoded',
+                method: "POST",
+                success: function (data) {
+                    console.log(data);
+                    // Преобразуем строку JSON в массив объектов
+                    var jsonArray = JSON.parse(data);
+
+                    // Получаем элементы для заголовков и тела таблицы
+                    const tableHeader = document.getElementById('tableHeader');
+                    const tableBody = document.getElementById('tableBody');
+
+                    // Очищаем существующие данные в таблице
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    // Проверяем, есть ли данные в массиве
+                    if (jsonArray.length > 0) {
+                        const headers = Object.keys(jsonArray[0]);
+
+                        // Создаём заголовки таблицы
+                        headers.forEach(header => {
+                            const th = document.createElement('th');
+                            th.textContent = header;
+                            tableHeader.appendChild(th);
+                        });
+
+                        // Добавляем заголовок для колонки с действиями
+                        const actionTh = document.createElement('th');
+                        actionTh.textContent = 'Actions';
+                        tableHeader.appendChild(actionTh);
+
+                        // Заполняем данные таблицы
+                        jsonArray.forEach(jsonObject => {
+                            const tr = document.createElement('tr');
+
+                            headers.forEach(header => {
+                                const td = document.createElement('td');
+
+                                // Если поле - ICON, то создаём элемент <i>
+                                if (header === 'ICON') {
+                                    const icon = document.createElement('i');
+                                    icon.className = jsonObject[header]; // Устанавливаем значение как класс иконки
+                                    td.appendChild(icon);
+                                } else {
+                                    td.textContent = jsonObject[header];
+                                }
+
+                                tr.appendChild(td);
+                            });
+
+                            ///////////////////////
+                            // Добавляем колонку с кнопкой Block
+                            const actionTd = document.createElement('td');
+                            const blockButton = document.createElement('a');
+                            blockButton.textContent = 'Delete REQ';
+                            blockButton.className = 'btn btn-danger';
+
+                            // Формируем ссылку для блокировки пользователя
+                            blockButton.href = `/User/DeleteReq?id=${jsonObject["REQUEST_ID"]}`;
+
+                            actionTd.appendChild(blockButton);
+                            tr.appendChild(actionTd);
+                            ///////////////////////////
+
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        console.log("Нет данных для отображения.");
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Ошибка запроса:', textStatus, errorThrown);
+                }
+            });
+        });
+
+    </script>
+
+
+</body>
+

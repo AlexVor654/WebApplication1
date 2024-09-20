@@ -1,0 +1,95 @@
+﻿@{
+    ViewBag.Title = "CreateReq";
+    Layout = "/Views/Shared/User_Layout.cshtml";
+}
+@model WebApplication1.Models.RequestDetail
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                <form id="createRequestForm">
+                    <h2>Create Request</h2>
+
+                    <div class="form-group">
+                        <label for="CATEGORY_ID" class="form-label">Category:</label>
+                        <select id="categoryDropdown" name="CATEGORY_ID" class="form-control" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="TITLE" class="form-label">Title:</label>
+                        <input type="text" class="form-control" id="TITLE" name="TITLE" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DESCRIPTION" class="form-label">Description:</label>
+                        <input type="text" class="form-control" id="DESCRIPTION" name="DESCRIPTION" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="EXECUTE_DATE" class="form-label">EXECUTE_DATE:</label>
+                        <input type="datetime-local" class="form-control" id="EXECUTE_DATE" name="EXECUTE_DATE" />
+                    </div>
+
+                    <br />
+                    <br />
+
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button type="submit" class="btn btn-success">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AllReq", "User")" class="btn btn-secondary mx-auto">AllReq</a>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Загрузка данных для выпадающих списков
+            $.ajax({
+                url: '@Url.Action("GetFormData", "User")', 
+                method: 'GET',
+                success: function (data) {
+                    // Заполнение выпадающего списка категориями
+                    data.categories.forEach(function (category) {
+                        $('#categoryDropdown').append(new Option(category.name, category.id));
+                    });
+                },
+                error: function () {
+                    alert('Error loading form data');
+                }
+            });
+
+            // Логирование данных формы при отправке
+            $('#createRequestForm').on('submit', function (event) {
+                event.preventDefault(); // Останавливаем отправку формы, чтобы проверить данные
+
+                var formData = new FormData(this); 
+
+                $.ajax({
+                    url: '@Url.Action("CreateReq", "User")',
+                    method: 'POST',
+                    data: formData,
+                    contentType: false, // Не устанавливаем тип контента
+                    processData: false, // Не обрабатываем данные
+                    success: function (response) {
+                        alert('Request sent successfully!');
+                        // Очистка формы, если нужно
+                        $('#createRequestForm')[0].reset();
+                    },
+                    error: function () {
+                        alert('Error sending request.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>

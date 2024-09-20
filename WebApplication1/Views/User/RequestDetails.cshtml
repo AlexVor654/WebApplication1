@@ -1,0 +1,119 @@
+﻿@{
+    ViewBag.Title = "ReqDetail";
+    Layout = "/Views/Shared/User_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Request Details</h2>
+    <div id="userInfoContainer"></div> <!-- Контейнер для вывода данных -->
+    <label for="exampleFormControlInput1" class="form-label">REQUEST_IDs</label>
+    <input class="form-label" id="testInput" value="1">
+    <button type="button" class="btn btn-secondary">press me</button>
+
+    <div id="tableContainer" style="display: none;">
+        <table class="table table-bordered" id="dataTable">
+            <thead>
+                <tr id="tableHeader"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <!-- Кнопка для перехода на другую страницу -->
+        <button id="goToEditPage" class="btn btn-primary">Create ReqValue</button>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Обработчик события на нажатие кнопки
+            $(".btn").on('click', function () {
+                console.log("pressbutton");
+
+                // Выполняем AJAX запрос
+                $.ajax({
+                    url: 'GetUsersInfo', // Убедитесь, что путь к вашему методу правильный
+                    data: {
+                        "val": $("#testInput").val() // Передаём значение из input
+                    },
+                    contentType: 'application/x-www-form-urlencoded',
+                    method: "POST",
+                    success: function (data) {
+                        console.log(data);
+                        // Преобразуем строку JSON в массив объектов
+                        var jsonArray = JSON.parse(data);
+
+                        // Получаем элементы для заголовков и тела таблицы
+                        const tableHeader = document.getElementById('tableHeader');
+                        const tableBody = document.getElementById('tableBody');
+
+                        // Очищаем существующие данные в таблице
+                        tableHeader.innerHTML = '';
+                        tableBody.innerHTML = '';
+
+                        // Проверяем, есть ли данные в массиве
+                        if (jsonArray.length > 0) {
+                            // Создаём заголовки таблицы на основе ключей первого объекта
+                            const headers = Object.keys(jsonArray[0]);
+                            console.log(headers);
+
+                            headers.forEach(header => {
+                                const th = document.createElement('th');
+                                th.textContent = header;
+                                tableHeader.appendChild(th);
+                            });
+
+                            jsonArray.forEach(jsonObject => {
+                                const tr = document.createElement('tr');
+
+                                headers.forEach(header => {
+                                    const td = document.createElement('td');
+                                    if (header === "TITLE") {
+                                        const a = document.createElement('a');
+                                        a.href = 'EditRequests?id=' + jsonObject[header];
+                                        a.className = "link-dark";
+                                        a.textContent = jsonObject[header];
+
+                                        // Сохранение записи в sessionStorage при клике
+                                        a.onclick = function () {
+                                            sessionStorage.setItem('selectedRecord', JSON.stringify(jsonObject));
+                                        };
+
+                                        td.appendChild(a);
+                                    } else {
+                                        td.textContent = jsonObject[header];
+                                    }
+                                    tr.appendChild(td);
+                                });
+
+                                tableBody.appendChild(tr);
+                            });
+
+                            // Отображаем таблицу и кнопку
+                            $('#tableContainer').show();
+                        } else {
+                            console.log("Нет данных для отображения.");
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error('Ошибка запроса:', textStatus, errorThrown);
+                    }
+                });
+            });
+
+            // Обработчик для перехода на другую страницу с данными из sessionStorage
+            $('#goToEditPage').on('click', function () {
+                // Получаем данные из sessionStorage
+                var selectedRecord = sessionStorage.getItem('selectedRecord');
+
+                if (selectedRecord) {
+                    // Если данные есть, создаём ссылку на редактирование
+                    window.location.href = 'CreatesReqVal';
+                } else {
+                    alert("No record selected.");
+                }
+            });
+
+            console.log("run");
+        });
+    </script>
+</body>

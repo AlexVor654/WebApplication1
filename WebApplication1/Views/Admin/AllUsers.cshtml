@@ -1,0 +1,87 @@
+﻿@{
+    ViewBag.Title = "AllUsers";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>AllCategory</h2>
+    <div id="userInfoContainer"></div> 
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr id="tableHeader">
+                <!-- Динамические заголовки -->
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Динамические строки -->
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("UserInsert", "Admin")" class="btn btn-success col-6 mx-auto">Create User</a>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: 'AllUsers',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function (data) {
+                    console.log(data);
+                    var jsonArray = JSON.parse(data);
+
+                    const tableHeader = document.getElementById('tableHeader');
+                    const tableBody = document.getElementById('tableBody');
+
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    if (jsonArray.length > 0) {
+                        const headers = Object.keys(jsonArray[0]);
+
+                        headers.forEach(header => {
+                            const th = document.createElement('th');
+                            th.textContent = header;
+                            tableHeader.appendChild(th);
+                        });
+
+                        jsonArray.forEach(jsonObject => {
+                            const tr = document.createElement('tr');
+
+                            headers.forEach(header => {
+                                const td = document.createElement('td');
+                                if (header === "CATEGORY_ID") {
+                                    const a = document.createElement('a');
+                                    a.href = 'EditCategories?id=' + jsonObject[header];
+                                    a.className = "link-dark";
+                                    a.textContent = jsonObject[header];
+
+                                    // Сохранение записи в sessionStorage при клике
+                                    a.onclick = function () {
+                                        sessionStorage.setItem('selectedRecord', JSON.stringify(jsonObject));
+                                    };
+
+                                    td.appendChild(a);
+                                } else {
+                                    td.textContent = jsonObject[header];
+                                }
+                                tr.appendChild(td);
+                            });
+
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        console.log("Нет данных для отображения.");
+                    }
+                },
+                error: function (data) {
+                    console.log("Ошибка при выполнении запроса:", data);
+                }
+            });
+        });
+
+    </script>
+
+</body>
+

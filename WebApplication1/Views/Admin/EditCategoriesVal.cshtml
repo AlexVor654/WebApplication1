@@ -1,0 +1,125 @@
+﻿@{
+    ViewBag.Title = "EditCategoryVal";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+@model WebApplication1.Models.CategoryVal
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                <form id ="editCategoryForm">
+                    <h2>Update categories</h2>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_ID" class="form-label">FIELD_ID:</label>
+                        <input type="text" class="form-control" id="FIELD_ID" name="P_FIELD_ID" disabled />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_CATEGORY_ID" class="form-label">CATEGORY_ID:</label>
+                        <input type="text" class="form-control" id="CATEGORY_ID" name="P_CATEGORY_ID" disabled />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_TYPE_ID" class="form-label">FIELD_TYPE_ID:</label>
+                        <input type="text" class="form-control" id="FIELD_TYPE_ID" name="P_FIELD_TYPE_ID" disabled />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_NAME" class="form-label">FIELD_NAME:</label>
+                        <input type="text" class="form-control" id="FIELD_NAME" name="P_FIELD_NAME" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_DESCRIPTION" class="form-label">DESCRIPTION:</label>
+                        <input type="text" class="form-control" id="DESCRIPTION" name="P_DESCRIPTION" required />
+                    </div>
+
+                    <h2>Update Categories field value</h2>
+                    
+                    <div class="form-group">
+                        <label for="P_SEARCH_FIELD_VALUE" class="form-label">SEARCH_FIELD_VALUE:</label>
+                        <input type="text" class="form-control" id="SEARCH_FIELD_VALUE" name="P_SEARCH_FIELD_VALUE" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_DISPLAY_TEXT" class="form-label">DISPLAY_TEXT:</label>
+                        <input type="text" class="form-control" id="DISPLAY_TEXT" name="P_DISPLAY_TEXT" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_VALUE" class="form-label">FIELD_VALUE:</label>
+                        <input type="text" class="form-control" id="FIELD_VALUE" name="P_FIELD_VALUE" required />
+                    </div>
+                    <br />
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button type="submit" asp-area="" asp-controller="Home" asp-action="AllRequest" class="btn btn-success">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AllCategorys", "Admin")" class="btn btn-secondary mx-auto">Go back</a>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var jsonObject = JSON.parse(sessionStorage.getItem('selectedRecord'));
+
+            if (jsonObject) {
+                console.log('Полученные данные:', jsonObject);
+                $('#FIELD_ID').val(jsonObject.FIELD_ID);
+                $('#CATEGORY_ID').val(jsonObject.CATEGORY_ID);
+                $('#FIELD_TYPE_ID').val(jsonObject.FIELD_TYPE_ID);
+                $('#FIELD_NAME').val(jsonObject.FIELD_NAME);
+                $('#DESCRIPTION').val(jsonObject.DESCRIPTION);
+                $('#DISPLAY_TEXT').val(jsonObject.DISPLAY_TEXT);
+                $('#FIELD_VALUE').val(jsonObject.FIELD_VALUE);
+                $('#SEARCH_FIELD_VALUE').val(jsonObject.FIELD_VALUE);
+                
+            }
+
+            $('form').submit(function (event) {
+                event.preventDefault();
+
+                var formData = {
+                    FIELD_ID: $('#FIELD_ID').val(),
+                    CATEGORY_ID: $('#CATEGORY_ID').val(),
+                    FIELD_TYPE_ID: $('#FIELD_TYPE_ID').val(),
+                    FIELD_NAME: $('#FIELD_NAME').val(),
+                    DESCRIPTION: $('#DESCRIPTION').val(),
+                    DISPLAY_TEXT: $('#DISPLAY_TEXT').val(),
+                    FIELD_VALUE: $('#FIELD_VALUE').val(),
+                    SEARCH_FIELD_VALUE: $('#FIELD_VALUE').val()
+                };
+
+                $.ajax({
+                    url: '@Url.Action("EditCategoryVal", "Admin")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        if (response.success) {
+                            alert('Категория успешно обновлена!');
+                        } else {
+                            alert('Не удалось обновить категорию: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Произошла ошибка при обновлении категории.');
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+
+</body>

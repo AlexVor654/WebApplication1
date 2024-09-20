@@ -1,0 +1,100 @@
+﻿@{
+    ViewBag.Title = "AllRequest";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Request Details</h2>
+    <div id="userInfoContainer"></div> 
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr id="tableHeader">
+                <!-- Динамические заголовки -->
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Динамические строки -->
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: 'AllRequest',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function (data) {
+                    var jsonArray = JSON.parse(data);
+                    console.log(jsonArray);
+
+                    const tableHeader = document.getElementById('tableHeader');
+                    const tableBody = document.getElementById('tableBody');
+
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    if (jsonArray.length > 0) {
+                        const headers = Object.keys(jsonArray[0]);
+                        console.log("headers:", headers);
+
+                        // Создаем заголовки таблицы
+                        headers.forEach(header => {
+                            const th = document.createElement('th');
+                            th.textContent = header;
+                            tableHeader.appendChild(th);
+                        });
+
+                        // Добавляем заголовок для кнопки Block
+                        const actionTh = document.createElement('th');
+                        actionTh.textContent = 'Actions';
+                        tableHeader.appendChild(actionTh);
+
+                        // Создаем строки таблицы
+                        jsonArray.forEach(jsonObject => {
+                            const tr = document.createElement('tr');
+
+                            headers.forEach(header => {
+                                const td = document.createElement('td');
+
+                                // Если поле - ICON, то создаём элемент <i>
+                                if (header === 'ICON') {
+                                    const icon = document.createElement('i');
+                                    icon.className = jsonObject[header]; // Устанавливаем значение как класс иконки
+                                    td.appendChild(icon);
+                                } else {
+                                    td.textContent = jsonObject[header]; // Для всех остальных полей
+                                }
+
+                                tr.appendChild(td);
+                            });
+
+                            // Добавляем колонку с кнопкой Block
+                            const actionTd = document.createElement('td');
+                            const blockButton = document.createElement('a');
+                            blockButton.textContent = 'Block';
+                            blockButton.className = 'btn btn-danger';
+
+                            // Формируем ссылку для блокировки пользователя
+                            blockButton.href = `/Admin/ProcedureBlockUser?id=${jsonObject["USER_ID"]}`;
+
+                            actionTd.appendChild(blockButton);
+                            tr.appendChild(actionTd);
+
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        console.log("Нет данных для отображения.");
+                    }
+                },
+                error: function (data) {
+                    console.log("Ошибка при выполнении запроса:", data);
+                }
+            });
+        });
+    </script>
+
+
+</body>
+

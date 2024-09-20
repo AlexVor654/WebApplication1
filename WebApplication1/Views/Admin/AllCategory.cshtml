@@ -1,0 +1,104 @@
+﻿@{
+    ViewBag.Title = "AllCategory";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>AllCategory</h2>
+    <div id="userInfoContainer"></div> 
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr id="tableHeader">
+                <!-- Динамические заголовки -->
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Динамические строки -->
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AllCategoryVals", "Admin")" class="btn btn-primary col-6 mx-auto">View CategoryVal</a>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("CreateCategorie", "Admin")" class="btn btn-success col-6 mx-auto">Create Category</a>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: 'AllCategory',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function (data) {
+                    console.log(data);
+                    var jsonArray = JSON.parse(data);
+
+                    const tableHeader = document.getElementById('tableHeader');
+                    const tableBody = document.getElementById('tableBody');
+
+                    tableHeader.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    if (jsonArray.length > 0) {
+                        const headers = Object.keys(jsonArray[0]);
+
+                        // Создание заголовков таблицы
+                        headers.forEach(header => {
+                            const th = document.createElement('th');
+                            th.textContent = header;
+                            tableHeader.appendChild(th);
+                        });
+
+                        // Заполнение таблицы данными
+                        jsonArray.forEach(jsonObject => {
+                            const tr = document.createElement('tr');
+
+                            headers.forEach(header => {
+                                const td = document.createElement('td');
+
+                                // Логика для поля CATEGORY_ID
+                                if (header === "CATEGORY_ID") {
+                                    const a = document.createElement('a');
+                                    a.href = 'EditCategories?id=' + jsonObject[header];
+                                    a.className = "link-dark";
+                                    a.textContent = jsonObject[header];
+
+                                    // Сохранение записи в sessionStorage при клике
+                                    a.onclick = function () {
+                                        sessionStorage.setItem('selectedRecord', JSON.stringify(jsonObject));
+                                    };
+
+                                    td.appendChild(a);
+                                }
+                                // Логика для поля CATEGORY_ICON
+                                else if (header === 'CATEGORY_ICON') {
+                                    const icon = document.createElement('i');
+                                    icon.className = jsonObject[header]; // Устанавливаем значение как класс иконки
+                                    td.appendChild(icon);
+                                }
+                                // Для всех остальных полей
+                                else {
+                                    td.textContent = jsonObject[header];
+                                }
+
+                                tr.appendChild(td);
+                            });
+
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        console.log("Нет данных для отображения.");
+                    }
+                },
+                error: function (data) {
+                    console.log("Ошибка при выполнении запроса:", data);
+                }
+            });
+        });
+    </script>
+
+
+</body>
+

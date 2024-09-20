@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "EditCCategorys";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+@model WebApplication1.Models.Category
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                <form id ="editCategoryForm">
+                    <h2>Update categories</h2>
+
+                    <div class="form-group">
+                        <label for="CATEGORY_ID" class="form-label">CATEGORY_ID:</label>
+                        <input type="text" class="form-control" id="CATEGORY_ID" name="CATEGORY_ID" disabled />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="USERNAME" class="form-label">CATEGORY_NAME:</label>
+                        <input type="text" class="form-control" id="CATEGORY_NAME" name="CATEGORY_NAME" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="CATEGORY_ICON" class="form-label">CATEGORY_ICON:</label>
+                        <input type="text" class="form-control" id="CATEGORY_ICON" name="CATEGORY_ICON" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="PROCEDURE_NAME" class="form-label">PROCEDURE_NAME:</label>
+                        <input type="text" class="form-control" id="PROCEDURE_NAME" name="PROCEDURE_NAME" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DESCRIPTION" class="form-label">DESCRIPTION:</label>
+                        <input type="text" class="form-control" id="DESCRIPTION" name="DESCRIPTION" required />
+                    </div>
+                    <br />
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button type="submit" asp-area="" asp-controller="Home" asp-action="AllRequest" class="btn btn-success">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AllCategorys", "Admin")" class="btn btn-secondary mx-auto">Go back</a>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var jsonObject = JSON.parse(sessionStorage.getItem('selectedRecord'));
+
+            if (jsonObject) {
+                console.log('Полученные данные:', jsonObject);
+                $('#CATEGORY_ID').val(jsonObject.CATEGORY_ID);
+                $('#CATEGORY_NAME').val(jsonObject.CATEGORY_NAME);
+                $('#CATEGORY_ICON').val(jsonObject.CATEGORY_ICON);
+                $('#PROCEDURE_NAME').val(jsonObject.PROCEDURE_NAME);
+                $('#DESCRIPTION').val(jsonObject.DESCRIPTION);
+            }
+
+            $('form').submit(function (event) {
+                event.preventDefault();
+
+                var formData = {
+                    CATEGORY_ID: $('#CATEGORY_ID').val(),
+                    CATEGORY_NAME: $('#CATEGORY_NAME').val(),
+                    CATEGORY_ICON: $('#CATEGORY_ICON').val(),
+                    PROCEDURE_NAME: $('#PROCEDURE_NAME').val(),
+                    DESCRIPTION: $('#DESCRIPTION').val()
+                };
+
+                $.ajax({
+                    url: '@Url.Action("EditCategory", "Admin")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        if (response.success) {
+                            alert('Категория успешно обновлена!');
+                        } else {
+                            alert('Не удалось обновить категорию: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Произошла ошибка при обновлении категории.');
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+
+</body>

@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "EditCCategorys";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+@model WebApplication1.Models.Category
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                <form id="createCategoryForm">
+                    <h2>Create val for categorie</h2>
+
+                    <div class="form-group">
+                        <label for="P_CATEGORY_ID" class="form-label">CATEGORY_ID:</label>
+                        <select id="categoryDropdown" name="P_CATEGORY_ID" class="form-control" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_TYPE_ID" class="form-label">FIELD_TYPE_ID:</label>
+                        <select id="fieldTypeDropdown" name="P_FIELD_TYPE_ID" class="form-control" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_FIELD_NAME" class="form-label">FIELD_NAME:</label>
+                        <input type="text" class="form-control" id="FIELD_NAME" name="P_FIELD_NAME" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="P_DESCRIPTION" class="form-label">DESCRIPTION:</label>
+                        <input type="text" class="form-control" id="DESCRIPTION" name="P_DESCRIPTION" required />
+                    </div>
+
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button type="submit" class="btn btn-success">Send</button>
+                    </div>
+                </form> <!-- Закрывающий тег формы добавлен -->
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AllCategoryVals", "Admin")" class="btn btn-secondary mx-auto">Go back</a>
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            // Загрузка данных для выпадающих списков
+            $.ajax({
+                url: '/Admin/GetFormData', // Обновил URL для вызова метода контроллера
+                method: 'GET',
+                success: function (data) {
+                    // Заполнение выпадающего списка полями
+                    data.field_types.forEach(function (field_type) {
+                        $('#fieldTypeDropdown').append(new Option(field_type.name, field_type.id));
+                    });
+                    data.categories.forEach(function (category) {
+                        $('#categoryDropdown').append(new Option(category.name, category.id));
+                    });
+                    console.log(data);
+                    
+                },
+                error: function () {
+                    alert('Error loading form data');
+                }
+            });
+
+            // Логирование данных формы при отправке
+            $('#createCategoryForm').on('submit', function (event) { // Исправлен id формы
+                event.preventDefault(); // Останавливаем отправку формы, чтобы проверить данные
+
+                var formData = {
+                    CATEGORY_ID: $('#CATEGORY_ID').val(),
+                    FIELD_TYPE_ID: $('#FieldTypeDropdown').val(),
+                    FIELD_NAME: $('#FIELD_NAME').val(),
+                    DESCRIPTION: $('#DESCRIPTION').val()
+                };
+
+                console.log('Form data:', formData);
+
+                // Отправка формы через AJAX
+                $.ajax({
+                    url: '/Admin/CreateCategoryField', // Убедитесь, что этот метод существует в контроллере
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        // Обработка успешного ответа
+                        alert('Request sent successfully!');
+                    },
+                    error: function () {
+                        // Обработка ошибки
+                        alert('Error sending request.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
