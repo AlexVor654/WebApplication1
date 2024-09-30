@@ -1,5 +1,5 @@
 ﻿@{
-    ViewBag.Title = "AllReq";
+    ViewBag.Title = "RequestsList";
     Layout = "/Views/Shared/User_Layout.cshtml";
 }
 <head>
@@ -17,7 +17,7 @@
         <tbody id="tableBody"></tbody>
     </table>
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("CreatesReq", "User")" class="btn btn-success col-6 mx-auto">Create Request</a>
+        <a href="@Url.Action("CreateRequests", "User")" class="btn btn-success col-6 mx-auto">Create Request</a>
     </div>
     
     
@@ -25,14 +25,24 @@
         $(document).ready(function () {
             // Выполняем AJAX запрос
             $.ajax({
-                url: 'AllUserReq', // Убедитесь, что путь к вашему методу правильный
+                url: 'GetRequestsList', // Убедитесь, что путь к вашему методу правильный
                 contentType: 'application/x-www-form-urlencoded',
                 method: "POST",
                 success: function (data) {
-                    console.log(data);
+                    
                     // Преобразуем строку JSON в массив объектов
                     var jsonArray = JSON.parse(data);
+                    console.log(jsonArray);
 
+                    // Маппинг статусов
+                    const statusMapping = {
+                        "1": "In Queue",
+                        "2": "In Progress",
+                        "3": "Processed with Success",
+                        "4": "Processed with Reject",
+                        "5": "Expired",
+                        "-1": "Crashed"
+                    };
                     // Получаем элементы для заголовков и тела таблицы
                     const tableHeader = document.getElementById('tableHeader');
                     const tableBody = document.getElementById('tableBody');
@@ -69,30 +79,41 @@
                                     const icon = document.createElement('i');
                                     icon.className = jsonObject[header]; // Устанавливаем значение как класс иконки
                                     td.appendChild(icon);
-                                } else {
+                                } 
+                                
+                                // Если поле - статус, то выводим статус из маппинга
+                                else if (header === 'STATUS') {
+                                    const status = statusMapping[jsonObject[header]] || 'Unknown'; // Маппинг статуса
+                                    td.textContent = status;
+                                }
+                                else {
                                     td.textContent = jsonObject[header];
                                 }
 
                                 tr.appendChild(td);
                             });
 
-                            ///////////////////////
-                            // Добавляем колонку с кнопкой Block
+
+
+                            
+                            // Добавляем колонку с кнопкой Delete
                             const actionTd = document.createElement('td');
                             const blockButton = document.createElement('a');
-                            blockButton.textContent = 'Delete REQ';
+                            blockButton.textContent = 'Delete';
                             blockButton.className = 'btn btn-danger';
 
                             // Формируем ссылку для блокировки пользователя
-                            blockButton.href = `/User/DeleteReq?id=${jsonObject["REQUEST_ID"]}`;
+                            blockButton.href = `/User/DeleteRequest?RequestId=${jsonObject["REQUEST_ID"]}`;
 
                             actionTd.appendChild(blockButton);
                             tr.appendChild(actionTd);
-                            ///////////////////////////
+                            
 
                             tableBody.appendChild(tr);
                         });
-                    } else {
+                    }
+                    
+                    else {
                         console.log("Нет данных для отображения.");
                     }
                 },

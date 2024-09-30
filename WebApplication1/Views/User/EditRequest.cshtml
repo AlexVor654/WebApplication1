@@ -2,8 +2,7 @@
     ViewBag.Title = "EditReq";
     Layout = "/Views/Shared/User_Layout.cshtml";
 }
-@model WebApplication1.Models.RequestDetail
-
+@model WebApplication1.Models.Request
 
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -20,16 +19,25 @@
                         <input type="text" class="form-control" id="REQUEST_ID" name="REQUEST_ID" disabled />
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label for="CATEGORY_ID" class="form-label">CATEGORY_ID:</label>
-                        <input type="text" class="form-control" id="CATEGORY_ID" name="CATEGORY_ID" disabled />
+                        <input type="hidden" id="CATEGORY_ID" name="CATEGORY_ID" />
+                    </div>
+
+                    <div class="form-group" style="display: none;">
+                        <label for="USER_ID" class="form-label">USER_ID:</label>
+                        <input type="hidden" id="USER_ID" name="USER_ID" />
                     </div>
 
                     <div class="form-group">
-                        <label for="USER_ID" class="form-label">USER_ID:</label>
-                        <input type="text" class="form-control" id="USER_ID" name="USER_ID" disabled />
+                        <label for="CATEGORY_NAME" class="form-label">CATEGORY:</label>
+                        <input type="text" class="form-control" id="CATEGORY_NAME" name="CATEGORY_NAME" disabled />
                     </div>
 
+                    <div class="form-group">
+                        <label for="USER_NAME" class="form-label">USER_NAME:</label>
+                        <input type="text" class="form-control" id="USER_NAME" name="USER_NAME" disabled />
+                    </div>
 
                     <div class="form-group">
                         <label for="TITLE" class="form-label">TITLE:</label>
@@ -42,8 +50,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="FIELD_ID" class="form-label">FIELD_ID:</label>
-                        <input type="text" class="form-control" id="FIELD_ID" name="FIELD_ID" required />
+                        <label for="FIELD_ID" class="form-label">FIELD NAME:</label>
+                        <select id="fieldDropdown" name="FIELD_ID" class="form-control" required></select>
                     </div>
 
                     <div class="form-group">
@@ -51,10 +59,8 @@
                         <input type="text" class="form-control" id="FIELD_VALUE" name="FIELD_VALUE" required />
                     </div>
 
-
-
                     <div class="d-grid gap-2 col-6 mx-auto">
-                        <button type="submit" asp-area="" asp-controller="Home" asp-action="Requests" class="btn btn-success">Send</button>
+                        <button type="submit" class="btn btn-success">Send</button>
                     </div>
                 </form>
             </div>
@@ -62,31 +68,57 @@
     </div>
 
     <script>
-
         $(document).ready(function () {
-            var jsonObject = JSON.parse(sessionStorage.getItem('selectedRecord'));
+            // Загрузка данных для выпадающих списков
+            $.ajax({
+                url: 'GetFormData', // Вызов метода контроллера
+                method: 'GET',
+                success: function (data) {
+                    // Заполнение выпадающего списка полями
+                    data.fields.forEach(function (field) {
+                        $('#fieldDropdown').append(new Option(field.name, field.id));
+                    });
 
-            if (jsonObject) {
-                console.log('Полученные данные:', jsonObject);
-                $('#REQUEST_ID').val(jsonObject.REQUEST_ID);
-                $('#CATEGORY_ID').val(jsonObject.CATEGORY_ID);
-                $('#USER_ID').val(jsonObject.USER_ID);
-                $('#TITLE').val(jsonObject.TITLE);
-                $('#DESCRIPTION').val(jsonObject.DESCRIPTION);
-                $('#FIELD_ID').val(jsonObject.FIELD_ID);
-                $('#FIELD_VALUE').val(jsonObject.FIELD_VALUE);
-            }
+                    // Установка имен категорий и пользователей в скрытые поля
+                    var jsonObject = JSON.parse(sessionStorage.getItem('selectedRecord'));
+                    if (jsonObject) {
+                        console.log('Полученные данные:', jsonObject);
+                        $('#REQUEST_ID').val(jsonObject.REQUEST_ID);
+                        $('#CATEGORY_ID').val(jsonObject.CATEGORY_ID);
+                        $('#USER_ID').val(jsonObject.USER_ID);
+                        $('#TITLE').val(jsonObject.TITLE);
+                        $('#DESCRIPTION').val(jsonObject.DESCRIPTION);
+                        $('#FIELD_ID').val(jsonObject.FIELD_ID);
+                        $('#FIELD_VALUE').val(jsonObject.FIELD_VALUE);
 
-            $('form').submit(function (event) {
-                event.preventDefault();
+                        // Установите имена категорий и пользователей
+                        const category = data.categories.find(c => c.id == jsonObject.CATEGORY_ID);
+                        const user = data.users.find(u => u.id == jsonObject.USER_ID);
+
+                        if (category) {
+                            $('#CATEGORY_NAME').val(category.name); // Устанавливаем имя категории
+                        }
+                        if (user) {
+                            $('#USER_NAME').val(user.name); // Устанавливаем имя пользователя
+                        }
+                    }
+                },
+                error: function () {
+                    alert('Error loading form data');
+                }
+            });
+
+            // Обработка отправки формы
+            $('#editCategoryForm').submit(function (event) {
+                event.preventDefault(); // Предотвращаем стандартное поведение формы
 
                 var formData = {
                     REQUEST_ID: $('#REQUEST_ID').val(),
-                    CATEGORY_ID: $('#CATEGORY_ID').val(),
-                    USER_ID: $('#USER_ID').val(),
+                    CATEGORY_ID: $('#CATEGORY_ID').val(), // Теперь передаем CATEGORY_ID
+                    USER_ID: $('#USER_ID').val(), // Теперь передаем USER_ID
                     TITLE: $('#TITLE').val(),
                     DESCRIPTION: $('#DESCRIPTION').val(),
-                    FIELD_ID: $('#FIELD_ID').val(),
+                    FIELD_ID: $('#fieldDropdown').val(), // Изменено на dropdown
                     FIELD_VALUE: $('#FIELD_VALUE').val()
                 };
 
@@ -97,20 +129,17 @@
                     data: JSON.stringify(formData),
                     success: function (response) {
                         if (response.success) {
-                            alert('Категория успешно обновлена!');
+                            alert('Запрос успешно обновлён!');
                         } else {
-                            alert('Не удалось обновить категорию: ' + response.message);
+                            alert('Не удалось обновить запрос: ' + response.message);
                         }
                     },
                     error: function (xhr, status, error) {
-                        alert('Произошла ошибка при обновлении категории.');
+                        alert('Произошла ошибка при обновлении запроса.');
                         console.log(error);
                     }
                 });
             });
         });
     </script>
-
-
-
 </body>

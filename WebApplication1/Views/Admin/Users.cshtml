@@ -1,12 +1,12 @@
 ﻿@{
-    ViewBag.Title = "AllCategoryVal";
+    ViewBag.Title = "Users";
     Layout = "/Views/Shared/Admin_Layout.cshtml";
 }
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h2>Category values</h2>
+    <h2>AllCategory</h2>
     <div id="userInfoContainer"></div> 
     
     <table class="table table-bordered">
@@ -20,16 +20,12 @@
         </tbody>
     </table>
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("CreatesCategorieField", "Admin")" class="btn btn-success col-6 mx-auto">Create Category Field</a>
-    </div>
-    <br />
-    <div class="d-flex justify-content-between">
-        <a href="@Url.Action("AllCategorys", "Admin")" class="btn btn-secondary col-6 mx-auto">Go back</a>
+        <a href="@Url.Action("AddUser", "Admin")" class="btn btn-success col-6 mx-auto">Create User</a>
     </div>
     <script>
         $(document).ready(function () {
             $.ajax({
-                url: 'AllCategoryVal',
+                url: 'GetUsers',
                 contentType: 'application/x-www-form-urlencoded',
                 success: function (data) {
                     console.log(data);
@@ -50,14 +46,20 @@
                             tableHeader.appendChild(th);
                         });
 
+                        // Добавляем заголовок для кнопки Block
+                        const actionTh = document.createElement('th');
+                        actionTh.textContent = 'Actions';
+                        tableHeader.appendChild(actionTh);
+
+
                         jsonArray.forEach(jsonObject => {
                             const tr = document.createElement('tr');
 
                             headers.forEach(header => {
                                 const td = document.createElement('td');
-                                if (header === "FIELD_ID") {
+                                if (header === "CATEGORY_ID") {
                                     const a = document.createElement('a');
-                                    a.href = 'EditCategorieVal?id=' + jsonObject[header];
+                                    a.href = 'EditCategories?id=' + jsonObject[header];
                                     a.className = "link-dark";
                                     a.textContent = jsonObject[header];
 
@@ -72,6 +74,18 @@
                                 }
                                 tr.appendChild(td);
                             });
+
+                            // Добавляем колонку с кнопкой Block
+                            const actionTd = document.createElement('td');
+                            const blockButton = document.createElement('a');
+                            blockButton.textContent = 'Block';
+                            blockButton.className = 'btn btn-danger';
+
+                            // Формируем ссылку для блокировки пользователя
+                            blockButton.href = `/Admin/BlockUser?BlockId=${jsonObject["USER_ID"]}`;
+
+                            actionTd.appendChild(blockButton);
+                            tr.appendChild(actionTd);
 
                             tableBody.appendChild(tr);
                         });

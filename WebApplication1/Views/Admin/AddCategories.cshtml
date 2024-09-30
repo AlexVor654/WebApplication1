@@ -1,5 +1,5 @@
 ﻿@{
-    ViewBag.Title = "CreateCategorys";
+    ViewBag.Title = "CreateCategories";
     Layout = "/Views/Shared/Admin_Layout.cshtml";
 }
 @model WebApplication1.Models.Category
@@ -42,7 +42,7 @@
     </div>
     <br />
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("AllCategorys", "Admin")" class="btn btn-secondary mx-auto">All Categorys</a>
+        <a href="@Url.Action("Categories", "Admin")" class="btn btn-secondary mx-auto">All Categorys</a>
     </div>
 
     <script>
@@ -75,8 +75,5 @@
             });
         });
     </script>
-
-
-
 
 </body>

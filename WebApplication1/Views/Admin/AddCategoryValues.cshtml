@@ -1,0 +1,90 @@
+﻿@{
+    ViewBag.Title = "CreateCategories";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+@model WebApplication1.Models.CategoryVal
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-4">
+                
+                    <h2>Create categorie Val</h2>
+                <form id="createCategoryForm">
+
+                    <div class="form-group">
+                        <label for="FIELD_ID" class="form-label">Field:</label>
+                        <select id="fieldDropdown" name="FIELD_ID" class="form-control" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="FIELD_VALUE" class="form-label">FIELD_VALUE:</label>
+                        <input type="text" class="form-control" id="FIELD_VALUE" name="FIELD_VALUE" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DISPLAY_TEXT" class="form-label">DISPLAY_TEXT:</label>
+                        <input type="text" class="form-control" id="DISPLAY_TEXT" name="DISPLAY_TEXT" required />
+                    </div>
+                    <br />
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <button type="submit" asp-area=""  class="btn btn-success">Send</button>
+                    </div>
+                   </form>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("Categories", "Admin")" class="btn btn-secondary mx-auto">All Categorys</a>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+            // Загрузка данных для выпадающих списков
+            $.ajax({
+                url: 'GetFormData', // Вызов метода контроллера
+                method: 'GET',
+                success: function (data) {
+                    // Заполнение выпадающего списка полями
+                    data.fields.forEach(function (field) {
+                        $('#fieldDropdown').append(new Option(field.name, field.id));
+                    });
+                    
+                },
+                error: function () {
+                    alert('Error loading form data');
+                }
+            });
+        // Логирование данных формы при отправке
+           $('#createCategoryForm').on('submit', function (event) {
+            event.preventDefault(); // Останавливаем отправку формы, чтобы проверить данные
+
+            var formData = {
+                    FIELD_ID: $('#fieldDropdown').val(),
+                    FIELD_VALUE: $('#FIELD_VALUE').val(),
+                    DISPLAY_TEXT: $('#DISPLAY_TEXT').val()
+            };
+
+            console.log('Form data:', formData);
+
+            // Отправка формы через AJAX
+            $.ajax({
+                    url: 'CreateCategoryValues',
+                method: 'POST',
+                data: formData,
+                success: function (response) {
+                    // Обработка успешного ответа
+                    alert('Request sent successfully!');
+                },
+                error: function () {
+                    // Обработка ошибки
+                    alert('Error sending request.');
+                }
+                  });
+           });
+        });
+    </script>
+</body>

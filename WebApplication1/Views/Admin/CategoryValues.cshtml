@@ -1,12 +1,12 @@
 ﻿@{
-    ViewBag.Title = "AllUsers";
+    ViewBag.Title = "AllCategoryVal";
     Layout = "/Views/Shared/Admin_Layout.cshtml";
 }
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h2>AllCategory</h2>
+    <h2>Category values</h2>
     <div id="userInfoContainer"></div> 
     
     <table class="table table-bordered">
@@ -20,12 +20,20 @@
         </tbody>
     </table>
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("UserInsert", "Admin")" class="btn btn-success col-6 mx-auto">Create User</a>
+        <a href="@Url.Action("AddCategoryField", "Admin")" class="btn btn-success col-6 mx-auto">Create Category Field</a>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AddCategoryValues", "Admin")" class="btn btn-success col-6 mx-auto">Create Category Field Values</a>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("Categories", "Admin")" class="btn btn-secondary col-6 mx-auto">Go back</a>
     </div>
     <script>
         $(document).ready(function () {
             $.ajax({
-                url: 'AllUsers',
+                url: 'GetCategoryValues',
                 contentType: 'application/x-www-form-urlencoded',
                 success: function (data) {
                     console.log(data);
@@ -51,9 +59,9 @@
 
                             headers.forEach(header => {
                                 const td = document.createElement('td');
-                                if (header === "CATEGORY_ID") {
+                                if (header === "FIELD_ID") {
                                     const a = document.createElement('a');
-                                    a.href = 'EditCategories?id=' + jsonObject[header];
+                                    a.href = 'EditCategoryValues?id=' + jsonObject[header];
                                     a.className = "link-dark";
                                     a.textContent = jsonObject[header];
 

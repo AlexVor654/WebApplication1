@@ -2,13 +2,16 @@
 {
     public class Request
     {
-        public int P_CATEGORY_ID { get; set; }
-        public string P_TITLE { get; set; } = string.Empty;
-        public string P_DESCRIPTION { get; set; } = string.Empty;
-        public int P_FIELD_ID { get; set; }
-        public int P_REQUEST_ID { get; set; }
-        public string P_FIELD_VALUE { get; set; } = string.Empty;
-        
+        public int CATEGORY_ID { get; set; }
+        public int USER_ID { get; set; }
+        public string TITLE { get; set; } = string.Empty;
+        public string DESCRIPTION { get; set; } = string.Empty;
+        public int REQUEST_ID { get; set; }
+        public DateTime? EXECUTE_DATE { get; set; }
+        public int FIELD_ID { get; set; }
+        public string FIELD_VALUE { get; set; } = string.Empty;
+
+
 
     }
 }

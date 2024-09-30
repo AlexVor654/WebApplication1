@@ -2,7 +2,7 @@
     ViewBag.Title = "CreateReq";
     Layout = "/Views/Shared/User_Layout.cshtml";
 }
-@model WebApplication1.Models.RequestDetail
+@model WebApplication1.Models.Request
 
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -48,7 +48,7 @@
     <br />
 
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("AllReq", "User")" class="btn btn-secondary mx-auto">AllReq</a>
+        <a href="@Url.Action("RequestsList", "User")" class="btn btn-secondary mx-auto">AllReq</a>
     </div>
 
     <script>
@@ -75,7 +75,7 @@
                 var formData = new FormData(this); 
 
                 $.ajax({
-                    url: '@Url.Action("CreateReq", "User")',
+                    url: '@Url.Action("CreateRequest", "User")',
                     method: 'POST',
                     data: formData,
                     contentType: false, // Не устанавливаем тип контента

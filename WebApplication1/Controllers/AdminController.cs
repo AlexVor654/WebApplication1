@@ -1,137 +1,145 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MvcApp.Models;
+
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using System.Diagnostics;
 using WebApplication1.Models;
-
+using WebApplication1.Helpers;
 
 
 
 
 namespace WebApplication1.Controllers
 {
-   
+    //[CustomAuthorize(2)]
     public class AdminController : Controller
     {
         private readonly IConfiguration _config;  
         private string _connectionString;
-
+        private LogHelper _logHelper; // Поле для LogHelper
         public AdminController(IConfiguration config) //Конструктор
         {
-            _config = config; //переменная _config для с appsetting.json
-            _connectionString = config.GetConnectionString("Db_Connection"); //переменная _connectionString для хранннения строки подключения к бд
+            _config = config; // Переменная для работы с appsettings.json
+            _connectionString = config.GetConnectionString("Db_Connection"); // Переменная для строки подключения к БД
+            _logHelper = new LogHelper(_config); // Создание LogHelper с помощью конфигурации
         }
-
         
 
-        public string AllRequest()  // метод для отображение всех req
+        //+
+        public string GetRequests()  // метод для отображение всех req
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             try
             {
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
+                using (var oracleConnection = new OracleConnection(_connectionString)) 
+                {
                 oracleConnection.Open(); //открываем наше соеденение
-
-                var oracleCommand = oracleConnection.CreateCommand();
-                oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                oracleCommand.CommandText = "ALL_REQUEST";
-                oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
+                    using (var oracleCommand = oracleConnection.CreateCommand()) { 
                 
-
+                    oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    oracleCommand.CommandText = "ALL_REQUEST";
+                    oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
+                
                 oracleCommand.ExecuteNonQuery();
 
+                _logHelper.LogAction((int)userId, "Requests page", $"admin {userId} view AllReq page", 1);
                 return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
+            }
+            }
             }
             catch (Exception ex)
             {
+                _logHelper.LogAction((int)userId, "Failed Requests page", $"admin {userId} can not view AllCategory page", 2);
                 Console.WriteLine(ex.Message);
             }
             return string.Empty;
         }
 
-        public string AllCategory() // метод для отображение всех categories
+        //+
+        public string GetCategories() // метод для отображение всех categories
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             try
             {
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
+                using(var oracleConnection = new OracleConnection(_connectionString)) 
+                { 
                 oracleConnection.Open(); //открываем наше соеденение
-
-                var oracleCommand = oracleConnection.CreateCommand();
+                using (var oracleCommand = oracleConnection.CreateCommand()) 
+                {                
                 oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                 oracleCommand.CommandText = "ALL_CATEGORY";
                 oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
 
 
                 oracleCommand.ExecuteNonQuery();
-
+                _logHelper.LogAction((int)userId, "Categories page", $"admin {userId} view AllCategory page", 1);
                 return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
+                    }
+                }    
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-            }
-            return string.Empty;
-        }
-        public string AllUsers() // метод для отображение всех categories
-        {
-            try
-            {
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
-                oracleConnection.Open(); //открываем наше соеденение
-
-                var oracleCommand = oracleConnection.CreateCommand();
-                oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                oracleCommand.CommandText = "ALL_USERS";
-                oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
-
-
-                oracleCommand.ExecuteNonQuery();
-
-                return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
-            }
-            catch (Exception ex)
-            {
+                _logHelper.LogAction((int)userId, "Failed Categories page", $"admin {userId} can not view AllCategory page", 2);
                 Console.WriteLine(ex.Message);
             }
             return string.Empty;
         }
 
-        public string AllCategoryVal() // метод для отображение всех доп полей categories
+        //+
+        public string GetUsers() // метод для отображение всех пользователей
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             try
             {
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
+                using (var oracleConnection = new OracleConnection(_connectionString)) 
+                { 
                 oracleConnection.Open(); //открываем наше соеденение
+                    using (var oracleCommand = oracleConnection.CreateCommand())
+                    {
+                        oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                        oracleCommand.CommandText = "ALL_USERS";
+                        oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
 
-                var oracleCommand = oracleConnection.CreateCommand();
+                        oracleCommand.ExecuteNonQuery();
+                        _logHelper.LogAction((int)userId, "Users page", $"admin {userId} view Users page", 1);
+
+                        return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logHelper.LogAction((int)userId, "Failed Users page", $"admin {userId} can not view Users page", 2);
+                Console.WriteLine(ex.Message);
+            }
+            return string.Empty;
+        }
+
+        //+
+        public string GetCategoryValues() // метод для отображение всех доп полей categories
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            try
+            {
+                using (var oracleConnection = new OracleConnection(_connectionString)) 
+                { 
+                oracleConnection.Open(); //открываем наше соеденение
+                    using ( var oracleCommand = oracleConnection.CreateCommand()) 
+                    {               
                 oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                 oracleCommand.CommandText = "ALL_CATEGORY_VAL";
                 oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
-
-
                 oracleCommand.ExecuteNonQuery();
 
+                _logHelper.LogAction((int)userId, "CategoryValues page", $"admin {userId} view CategoryValues page", 1);
                 return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
+                    }
+                }
             }
             catch (Exception ex)
             {
+                _logHelper.LogAction((int)userId, "Failed CategoryValues page", $"admin {userId} can not view CategoryValues page", 2);
                 Console.WriteLine(ex.Message);
             }
             return string.Empty;
@@ -139,10 +147,11 @@ namespace WebApplication1.Controllers
 
         
         
-
+        //+
         [HttpPost]
-        public IActionResult EditCategoryVal([FromBody] CategoryVal model) // метод для отображение изменение доп поля category
+        public IActionResult UpdateCategoryValues([FromBody] CategoryVal model) // метод для отображение изменение доп поля category
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             if (ModelState.IsValid)
             {
                 try
@@ -170,27 +179,26 @@ namespace WebApplication1.Controllers
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
-
-                    // Успешное обновление
+                    _logHelper.LogAction((int)userId, "EditCategoryValues", $"admin {userId} edit EditCategoryValues", 1);
+                    
                     return Json(new { success = true });
                 }
                 catch (Exception ex)
                 {
-                    // Логируем ошибку (по возможности используйте более продвинутое логирование)
+                    _logHelper.LogAction((int)userId, "Failed EditCategoryValues", $"admin {userId} can not edit EditCategoryValues", 2);
+                    
                     return Json(new { success = false, message = ex.Message });
                 }
             }
 
-            // Если модель не валидна
-            return Json(new { success = false, message = "Invalid data" });
+            return View(model);
         }
 
+
         [HttpPost]
-        public IActionResult EditCategory([FromBody] Category model) // метод для изменения req
+        public IActionResult UpdateCategory([FromBody] Category model) // метод для изменения req
         {
-
-            
-
+            int? userId = HttpContext.Session.GetInt32("UserId");
             if (ModelState.IsValid)
             {
                 try
@@ -198,41 +206,40 @@ namespace WebApplication1.Controllers
                     using (var oracleConnection = new OracleConnection(_connectionString))
                     {
                         oracleConnection.Open();
-
-
                         using (var oracleCommand = oracleConnection.CreateCommand())
                         {
                             oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                             oracleCommand.CommandText = "UPDATE_CATEGORY";
 
                             // Параметры процедуры
-                            oracleCommand.Parameters.Add("P_CATEGORY_ID", OracleDbType.Int32).Value = model.CATEGORY_ID;
-                            oracleCommand.Parameters.Add("P_CATEGORY_NAME", OracleDbType.Varchar2).Value = model.CATEGORY_NAME;
-                            oracleCommand.Parameters.Add("P_CATEGORY_ICON", OracleDbType.Varchar2).Value = model.CATEGORY_ICON;
-                            oracleCommand.Parameters.Add("P_PROCEDURE_NAME", OracleDbType.Varchar2).Value = model.PROCEDURE_NAME;
-                            oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.DESCRIPTION;
+                            oracleCommand.Parameters.Add("P_CATEGORY_ID", OracleDbType.Int32).Value = model.CategoryId;
+                            oracleCommand.Parameters.Add("P_CATEGORY_NAME", OracleDbType.Varchar2).Value = model.CategoryName;
+                            oracleCommand.Parameters.Add("P_CATEGORY_ICON", OracleDbType.Varchar2).Value = model.CategoryIcon;
+                            oracleCommand.Parameters.Add("P_PROCEDURE_NAME", OracleDbType.Varchar2).Value = model.ProcedureName;
+                            oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.Description;
 
                             oracleCommand.ExecuteNonQuery();
                             // model.CATEGORY_NAME = username; //TODO: Delete this
                         }
                     }
-
+                    _logHelper.LogAction((int)userId, "EditCategory", $"admin {userId} edit Category", 1);
                     // Успешное обновление
                     return Json(new { success = true });
                 }
                 catch (Exception ex)
                 {
+                    _logHelper.LogAction((int)userId, "Failed EditCategory", $"admin {userId} can not edit Category", 2);
                     // Логируем ошибку (по возможности используйте более продвинутое логирование)
                     return Json(new { success = false, message = ex.Message });
                 }
             }
 
-            // Если модель не валидна
-            return Json(new { success = false, message = "Invalid data" });
+            return View(model);
         }
 
-        public IActionResult ProcedureBlockUser(int id) // метод для блокирования пользователя
+        public IActionResult BlockUser(int BlockId) // метод для блокирования пользователя
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             try
             {
                 using (var oracleConnection = new OracleConnection(_connectionString))
@@ -243,28 +250,44 @@ namespace WebApplication1.Controllers
                     {
                         oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                         oracleCommand.CommandText = "BLOCK_USER";
-                        oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = id;
+                        oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = BlockId;
 
                         oracleCommand.ExecuteNonQuery();
                     }
                 }
-
+                _logHelper.LogAction((int)userId, "UserBlock", $"admin {userId} block a user", 1);
                 // Редирект на страницу, например, список пользователей
-                return RedirectToAction("AllRequests"); // Или на другую страницу
+                return RedirectToAction("AllUser"); // Или на другую страницу
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-
+                _logHelper.LogAction((int)userId, "Failed UserBlock", $"admin {userId} block can not get", 2);
                 // В случае ошибки можно вернуть представление с ошибкой или другую логику
                 return View("Error"); // Показываем страницу с ошибкой
             }
         }
-        [HttpGet] 
-        
-        [HttpPost]
-        public IActionResult UserInsert(UserModel model) // метод для доьавления пользователя
+        [HttpGet]
+
+        public IActionResult CheckSession()
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            int? userRole = HttpContext.Session.GetInt32("UserRole");
+
+            if (userId.HasValue && userRole.HasValue)
+            {
+                return Content($"Session is active. UserId: {userId}, UserRole: {userRole}");
+            }
+            else
+            {
+                return Content("Session is not active or values are missing.");
+            }
+        }
+
+
+        [HttpPost]
+        public IActionResult CreateUser(UserModel model) // метод для доьавления пользователя
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             if (ModelState.IsValid)
             {
                 try
@@ -278,23 +301,25 @@ namespace WebApplication1.Controllers
                             oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                             oracleCommand.CommandText = "NEW_USER";
 
-                            oracleCommand.Parameters.Add("p_username", OracleDbType.Varchar2).Value = model.RoleId;
-                            oracleCommand.Parameters.Add("p_email", OracleDbType.Varchar2).Value = model.Username;
-                            oracleCommand.Parameters.Add("p_password", OracleDbType.Varchar2).Value = model.FIRST_NAME;
-                            oracleCommand.Parameters.Add("p_username", OracleDbType.Varchar2).Value = model.LAST_NAME;
-                            oracleCommand.Parameters.Add("p_email", OracleDbType.Varchar2).Value = model.Email;
-                            oracleCommand.Parameters.Add("p_password", OracleDbType.Varchar2).Value = model.PHONE;
-                            oracleCommand.Parameters.Add("p_password", OracleDbType.Varchar2).Value = model.PASSWD;
+                            oracleCommand.Parameters.Add("P_ROLE_ID", OracleDbType.Varchar2).Value =1;
+                            oracleCommand.Parameters.Add("P_USERNAME", OracleDbType.Varchar2).Value = model.Username;
+                            oracleCommand.Parameters.Add("P_FIRST_NAME", OracleDbType.Varchar2).Value = model.FirstName;
+                            oracleCommand.Parameters.Add("P_FIRST_NAME", OracleDbType.Varchar2).Value = model.LastName;
+                            oracleCommand.Parameters.Add("P_EMAIL", OracleDbType.Varchar2).Value = model.Email;
+                            oracleCommand.Parameters.Add("P_PHONE", OracleDbType.Varchar2).Value = model.Phone;
+                            oracleCommand.Parameters.Add("p_password", OracleDbType.Varchar2).Value = PasswordHelper.HashPassword(model.Password); 
 
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
 
-                    ViewBag.Message = "User inserted successfully!";
+                    _logHelper.LogAction((int)userId, "CreateUser", $"admin {userId} create a new user", 1);
+                    return Json(new { success = true, message = "User created successfully" });
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.Message = "Error: " + ex.Message;
+                    _logHelper.LogAction((int)userId, "Failed CreateUser", $"admin {userId} can not create a new user", 2);
+                    return Json(new { success = false, message = ex.Message });
                 }
             }
             return View(model);
@@ -315,26 +340,64 @@ namespace WebApplication1.Controllers
                         {
                             oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                             oracleCommand.CommandText = "CREATE_CATEGORY";
-                            oracleCommand.Parameters.Add("P_CATEGORY_NAME", OracleDbType.Varchar2).Value = model.CATEGORY_NAME;
-                            oracleCommand.Parameters.Add("P_CATEGORY_ICON", OracleDbType.Varchar2).Value = model.CATEGORY_ICON;
-                            oracleCommand.Parameters.Add("P_PROCEDURE_NAME", OracleDbType.Varchar2).Value = model.PROCEDURE_NAME;
-                            oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.DESCRIPTION;
+                            oracleCommand.Parameters.Add("P_CATEGORY_NAME", OracleDbType.Varchar2).Value = model.CategoryName;
+                            oracleCommand.Parameters.Add("P_CATEGORY_ICON", OracleDbType.Varchar2).Value = model.CategoryIcon;
+                            oracleCommand.Parameters.Add("P_PROCEDURE_NAME", OracleDbType.Varchar2).Value = model.ProcedureName;
+                            oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.Description;
 
-                            foreach (OracleParameter param in oracleCommand.Parameters)
-                            {
-                                Debug.WriteLine($"Parameter Name: {param.ParameterName}, Value: {param.Value}");
-                            }
+                            oracleCommand.ExecuteNonQuery();
 
+                        }
+                    }
+                    int? userId = HttpContext.Session.GetInt32("UserId");
+                    var logHelper = new LogHelper(_config);
+                    logHelper.LogAction(userId.Value, "Creating", $"user{userId} create a category", 1);
+                    return Json(new { success = true, message = "Category created successfully" });
+
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = ex.Message });
+                }
+            }
+
+            // Если нужно отобразить сообщение об успешной вставке или ошибке, можно оставить текущий метод
+            return View(model);
+        }
+
+
+        [HttpPost]
+        public IActionResult CreateCategoryValues(CategoryVal model) // метод для создания req
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            var logHelper = new LogHelper(_config);
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    using (var oracleConnection = new OracleConnection(_connectionString))
+                    {
+                        oracleConnection.Open();
+
+                        using (var oracleCommand = oracleConnection.CreateCommand())
+                        {
+                            oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                            oracleCommand.CommandText = "CREATE_CATEGORY_FIELD_VAL";
+                            oracleCommand.Parameters.Add("P_FIELD_ID", OracleDbType.Varchar2).Value = model.FIELD_ID;
+                            oracleCommand.Parameters.Add("P_DISPLAY_TEXT", OracleDbType.Varchar2).Value = model.DISPLAY_TEXT;
+                            oracleCommand.Parameters.Add("P_FIELD_VALUE", OracleDbType.Varchar2).Value = model.FIELD_VALUE;
 
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
-
                     
+                    logHelper.LogAction(userId.Value, "Creating CategoryValues", $"user{userId} create a category value", 1);
+                    return Json(new { success = true, message = "Category created successfully" });
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.Message = "Error: " + ex.Message;
+                    logHelper.LogAction(userId.Value, "Creating CategoryValues", $"user{userId} don't create a category value", 2);
+                    return Json(new { success = false, message = ex.Message });
                 }
             }
 
@@ -355,30 +418,25 @@ namespace WebApplication1.Controllers
                         using (var oracleCommand = oracleConnection.CreateCommand())
                         {
                             oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                            oracleCommand.CommandText = "CREATE_REQ_VAL";
+                            oracleCommand.CommandText = "CREATE_CATEGORY_FIELD";
                             oracleCommand.Parameters.Add("P_CATEGORY_ID", OracleDbType.Int32).Value = model.CATEGORY_ID;
                             oracleCommand.Parameters.Add("P_FIELD_TYPE_ID", OracleDbType.Int32).Value = model.FIELD_TYPE_ID;
                             oracleCommand.Parameters.Add("P_FIELD_NAME", OracleDbType.Varchar2).Value = model.FIELD_NAME;
                             oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.DESCRIPTION;
 
-                            foreach (OracleParameter param in oracleCommand.Parameters)
-                            {
-                                Debug.WriteLine($"Parameter Name: {param.ParameterName}, Value: {param.Value}");
-                            }
-
-
+                            
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
 
-                    // Перенаправление на другую страницу или отображение успешного сообщения
-                    ViewBag.Message = "Request inserted successfully!";
-                    // Например, перенаправление на страницу со списком запросов
-                    // return RedirectToAction("Requests");
+                    int? userId = HttpContext.Session.GetInt32("UserId");
+                    var logHelper = new LogHelper(_config);
+                    logHelper.LogAction(userId.Value, "CreatingField", $"user{userId} create a category field", 1);
+                    return Json(new { success = true, message = "Category Field created successfully" });
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.Message = "Error: " + ex.Message;
+                    return Json(new { success = false, message = ex.Message });
                 }
             }
 
@@ -386,75 +444,54 @@ namespace WebApplication1.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        public IActionResult Privacy(CalculatorModel calculatorModel )
+
+        public IActionResult AddUser()
         {
-
-            if (calculatorModel.Operation == "plus")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber + calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "minus")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber - calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "umn")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber * calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "delete")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber / calculatorModel.SecondNumber;
-            }
-
-            return Content($"Your result: {calculatorModel.Result}");
-        }
-
-
-        public IActionResult UserInsert()
-        {
-            return View();
+            return View("Views/Admin/AddUser.cshtml");
         }
 
         // Обработка данных из формы и вставка в базу данных
-        public IActionResult EditCategorieVal()
+        public IActionResult EditCategoryValues()
         {
-            return View("Views/Admin/EditCategoriesVal.cshtml");
+            return View("Views/Admin/EditCategoryValues.cshtml");
         }
 
-        public IActionResult AllRequests()
+        public IActionResult Requests()
         {
-            return View("Views/Admin/AllRequests.cshtml");
+            return View("Views/Admin/Requests.cshtml");
         }
-        public IActionResult AllUser()
+        public IActionResult Users()
         {
-            return View("Views/Admin/AllUsers.cshtml");
+            return View("Views/Admin/Users.cshtml");
         }
 
-        public IActionResult AllCategoryVals()
+        public IActionResult CategoryValues()
         {
-            return View("Views/Admin/AllCategoryVal.cshtml");
+            return View("Views/Admin/CategoryValues.cshtml");
         }
 
         
-        public IActionResult AllCategorys()
+        public IActionResult Categories()
         {
-            return View("Views/Admin/AllCategory.cshtml");
+            return View("Views/Admin/Categories.cshtml");
         }
         public IActionResult EditCategories()
         {
             return View();
         }
-        public IActionResult CreateCategorie()
+        public IActionResult AddCategories()
         {
-            return View("Views/Admin/CreateCategories.cshtml");
+            return View("Views/Admin/AddCategories.cshtml");
+        }
+        public IActionResult AddCategoryField()
+        {
+            return View("Views/Admin/AddCategoryField.cshtml");
         }
 
-        public IActionResult CreatesCategorieField()
+        public IActionResult AddCategoryValues()
         {
-            return View("Views/Admin/CreateCategoriesVal.cshtml");
+            return View("Views/Admin/AddCategoryValues.cshtml");
         }
-        public IActionResult Privacy() => View();
 
         [HttpGet]
         public JsonResult GetFormData() //выборка данных для dropdown
@@ -469,22 +506,22 @@ namespace WebApplication1.Controllers
                 command.CommandType = CommandType.StoredProcedure;
 
                 // Параметры для категорий
-                var categoryCursor = command.Parameters.Add("p_categories", OracleDbType.RefCursor);
+                var categoryCursor = command.Parameters.Add("P_CATEGORIES", OracleDbType.RefCursor);
                 categoryCursor.Direction = ParameterDirection.Output;
 
                 // Параметры для пользователей
-                var userCursor = command.Parameters.Add("p_users", OracleDbType.RefCursor);
+                var userCursor = command.Parameters.Add("P_USERS", OracleDbType.RefCursor);
                 userCursor.Direction = ParameterDirection.Output;
 
                 // Параметры для полей
-                var fieldCursor = command.Parameters.Add("p_fields", OracleDbType.RefCursor);
+                var fieldCursor = command.Parameters.Add("P_FIELDS", OracleDbType.RefCursor);
                 fieldCursor.Direction = ParameterDirection.Output;
 
                 // Параметры для типов полей
-                var field_typeCursor = command.Parameters.Add("p_field_types", OracleDbType.RefCursor);
+                var field_typeCursor = command.Parameters.Add("P_FIELD_TYPES", OracleDbType.RefCursor);
                 field_typeCursor.Direction = ParameterDirection.Output;
 
-                var requestCursor = command.Parameters.Add("p_requests", OracleDbType.RefCursor);
+                var requestCursor = command.Parameters.Add("P_REQUESTS", OracleDbType.RefCursor);
                 requestCursor.Direction = ParameterDirection.Output;
 
                 command.ExecuteNonQuery();

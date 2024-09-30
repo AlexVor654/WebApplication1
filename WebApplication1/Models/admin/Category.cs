@@ -2,14 +2,14 @@
 {
     public class Category
     {
-        public int CATEGORY_ID { get; set; }
-        public string CATEGORY_NAME { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
         
-        public string CATEGORY_ICON { get; set; } = string.Empty;
+        public string CategoryIcon { get; set; } = string.Empty;
         
-        public string PROCEDURE_NAME { get; set; } = string.Empty;
+        public string ProcedureName { get; set; } = string.Empty;
 
-        public string DESCRIPTION { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         
     }
 }

@@ -64,7 +64,7 @@
     </div>
     <br />
     <div class="d-flex justify-content-between">
-        <a href="@Url.Action("AllCategorys", "Admin")" class="btn btn-secondary mx-auto">Go back</a>
+        <a href="@Url.Action("Categories", "Admin")" class="btn btn-secondary mx-auto">Go back</a>
     </div>
 
     <script>
@@ -95,11 +95,11 @@
                     DESCRIPTION: $('#DESCRIPTION').val(),
                     DISPLAY_TEXT: $('#DISPLAY_TEXT').val(),
                     FIELD_VALUE: $('#FIELD_VALUE').val(),
-                    SEARCH_FIELD_VALUE: $('#FIELD_VALUE').val()
+                    SEARCH_FIELD_VALUE: $('#SEARCH_FIELD_VALUE').val()
                 };
 
                 $.ajax({
-                    url: '@Url.Action("EditCategoryVal", "Admin")',
+                    url: '@Url.Action("UpdateCategoryValues", "Admin")',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),

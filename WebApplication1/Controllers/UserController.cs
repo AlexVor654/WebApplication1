@@ -1,11 +1,10 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Mvc;
-using MvcApp.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 using System.Data;
-using System.Diagnostics;
 using WebApplication1.Models;
+using WebApplication1.Helpers;
 
 
 
@@ -13,50 +12,116 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
-   
+    //[CustomAuthorize(1)]
     public class UserController : Controller
     {
         private readonly IConfiguration _config;
         private string _connectionString;
-        private static int _user_id = 1;
 
+        private LogHelper _logHelper; // Поле для LogHelper
         public UserController(IConfiguration config) //Конструктор
         {
-            _config = config; //переменная _config для с appsetting.json
-            _connectionString = config.GetConnectionString("Db_Connection"); //переменная _connectionString для хранннения строки подключения к бд
-        }      
+            _config = config; // Переменная для работы с appsettings.json
+            _connectionString = config.GetConnectionString("Db_Connection"); // Переменная для строки подключения к БД
+            _logHelper = new LogHelper(_config); // Создание LogHelper с помощью конфигурации
+        }
 
-        public string AllUserReq() // метод для отображения всех req пользователя
+        public IActionResult CheckSession()
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            int? userRole = HttpContext.Session.GetInt32("UserRole");
+
+            if (userId.HasValue && userRole.HasValue)
+            {
+                return Content($"Session is active. UserId: {userId}, UserRole: {userRole}");
+            }
+            else
+            {
+                return Content("Session is not active or values are missing.");
+            }
+        }
+
+        //+
+        public string GetRequestsList()
         {
             try
             {
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
-                oracleConnection.Open(); //открываем наше соеденение
+                using (var oracleConnection = new OracleConnection(_connectionString)) // Используем using для автоматического закрытия соединения
+                {
+                    oracleConnection.Open(); // Открываем соединение
 
-                var oracleCommand = oracleConnection.CreateCommand();
-                oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                oracleCommand.CommandText = "All_USER_REQ";
-                oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
-                oracleCommand.Parameters.Add("p_user_id", OracleDbType.Int32).Value = _user_id;
+                    using (var oracleCommand = oracleConnection.CreateCommand())
+                    {
+                        oracleCommand.CommandType = CommandType.StoredProcedure;
+                        oracleCommand.CommandText = "All_USER_REQ";//??
 
-                oracleCommand.ExecuteNonQuery();
+                        // Возвращаемое значение
+                        oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
+                        // Передаем ID пользователя
+                        oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = HttpContext.Session.GetInt32("UserId");
 
-                return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
+                        oracleCommand.ExecuteNonQuery(); // Выполняем команду
+
+                        // Получаем данные из CLOB
+                        var returnValue = oracleCommand.Parameters["RETURN"].Value as Oracle.ManagedDataAccess.Types.OracleClob;
+
+                        // Возвращаем содержимое CLOB
+                        if (returnValue != null)
+                        {
+                            return returnValue.Value;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
+                // Логируем ошибку или возвращаем сообщение об ошибке 
+                Console.WriteLine($"Ошибка в методе GetRequestsList: {ex.Message}");
+                // Возможно, стоит добавить более подробное логирование
+            }
+
+            return string.Empty; // Если произошла ошибка или данных нет, возвращаем пустую строку
+        }
+
+
+        //+
+        public string GetDetailRequest([FromForm] int RequestId) // метод для отображения подробно req
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            try
+            {
+                using (var oracleConnection = new OracleConnection(_connectionString)) { 
+                   // Request.Form.TryGetValue("val", out var val);
+                    //int.TryParse(val, out int ReqId);//чтобы не было ошибок    
+                    oracleConnection.Open(); //открываем наше соеденение
+                    using (var oracleCommand = oracleConnection.CreateCommand()) { 
+                oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                oracleCommand.CommandText = "GET_REQUEST_BY_ID";
+                oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
+                oracleCommand.Parameters.Add("P_REQUEST_ID", OracleDbType.Int32).Value = RequestId;
+                oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = HttpContext.Session.GetInt32("UserId");
+
+                oracleCommand.ExecuteNonQuery();
+
+                        _logHelper.LogAction((int)userId, "GetDetailRequest page", $"user with id:{userId} view detail Req page", 1);
+                        return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logHelper.LogAction((int)userId, "AllReq page", $"user with id:{userId} can not view AllReq page", 2);
                 Console.WriteLine(ex.Message);
             }
             return string.Empty;
         }
 
+
+        //+
         [HttpPost]
-        public IActionResult CreateReq(RequestDetail model) // метод для создания req
+        public IActionResult CreateRequest(Request model) // метод для создания req
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             if (ModelState.IsValid)
             {
                 try
@@ -70,28 +135,24 @@ namespace WebApplication1.Controllers
                             oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                             oracleCommand.CommandText = "CREATE_REQ";
                             oracleCommand.Parameters.Add("P_CATEGORY_ID", OracleDbType.Int32).Value = model.CATEGORY_ID; 
-                            oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = 1;
+                            oracleCommand.Parameters.Add("P_USER_ID", OracleDbType.Int32).Value = HttpContext.Session.GetInt32("UserId");
                             oracleCommand.Parameters.Add("P_TITLE", OracleDbType.Varchar2).Value = model.TITLE;
                             oracleCommand.Parameters.Add("P_DESCRIPTION", OracleDbType.Varchar2).Value = model.DESCRIPTION;
                             oracleCommand.Parameters.Add("P_EXECUTE_DATE", OracleDbType.Date).Value = model.EXECUTE_DATE;
 
-                            foreach (OracleParameter param in oracleCommand.Parameters)
-                            {
-                                Debug.WriteLine($"Parameter Name: {param.ParameterName}, Value: {param.Value}");
-                            }
-
+                           
 
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
-
+                    _logHelper.LogAction((int)userId, "CreateReq", $"user with id:{userId} creating req", 1);
                     // Перенаправление на другую страницу или отображение успешного сообщения
                     ViewBag.Message = "Request inserted successfully!";
-                    // Например, перенаправление на страницу со списком запросов
-                    // return RedirectToAction("Requests");
+                    
                 }
                 catch (Exception ex)
                 {
+                    _logHelper.LogAction((int)userId, "Failed CreateReq", $"user with id:{userId} can not creating req", 2);
                     ViewBag.Message = "Error: " + ex.Message;
                 }
             }
@@ -99,9 +160,12 @@ namespace WebApplication1.Controllers
             // Если нужно отобразить сообщение об успешной вставке или ошибке, можно оставить текущий метод
             return View(model);
         }
+
+        //+(но будут улучшения, так как данные заполняются не динамически с методом CreateReq)
         [HttpPost]
-        public IActionResult CreateReqVal(RequestDetail model) // метод для создания доп полей req
+        public IActionResult CreateReqVal(Request model) // метод для создания доп полей req
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             if (ModelState.IsValid)
             {
                 try
@@ -118,24 +182,22 @@ namespace WebApplication1.Controllers
                             oracleCommand.Parameters.Add("P_FIELD_ID", OracleDbType.Int32).Value = model.FIELD_ID;
                             oracleCommand.Parameters.Add("P_FIELD_VALUE", OracleDbType.Varchar2).Value = model.FIELD_VALUE;
 
-                            foreach (OracleParameter param in oracleCommand.Parameters)
-                            {
-                                Debug.WriteLine($"Parameter Name: {param.ParameterName}, Value: {param.Value}");
-                            }
-
-
+                           
+                            
                             oracleCommand.ExecuteNonQuery();
                         }
                     }
 
                     // Перенаправление на другую страницу или отображение успешного сообщения
-                    ViewBag.Message = "Request inserted successfully!";
+                    _logHelper.LogAction((int)userId, "CreateReq", $"user with id:{userId} creating req values", 1);
+                    return Json(new { success = true, message = "Category created successfully" });
                     // Например, перенаправление на страницу со списком запросов
                     // return RedirectToAction("Requests");
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.Message = "Error: " + ex.Message;
+                    _logHelper.LogAction((int)userId, "Failed CreateReq", $"user with id:{userId} can not creating req", 2);
+                    return Json(new { success = false, message = ex.Message });
                 }
             }
 
@@ -143,13 +205,11 @@ namespace WebApplication1.Controllers
             return View(model);
         }
 
+
         [HttpPost]
-        public IActionResult EditRequest([FromBody] RequestDetail model) // метод для изменения req
+        public IActionResult UpdateRequest([FromBody] Request model) // метод для изменения req
         {
-
-            /// test section
-
-            // var username = HttpContext.Request.Form["USERNAME"]; //TODO: Delete this
+            int? userId = HttpContext.Session.GetInt32("UserId");
 
             if (ModelState.IsValid)
             {
@@ -175,56 +235,27 @@ namespace WebApplication1.Controllers
                             oracleCommand.Parameters.Add("FIELD_VALUE", OracleDbType.Varchar2).Value = model.FIELD_VALUE;
 
                             oracleCommand.ExecuteNonQuery();
-                            // model.CATEGORY_NAME = username; //TODO: Delete this
+                            
                         }
                     }
-
+                    _logHelper.LogAction((int)userId, "EditReq", $"user with id:{userId} edit his req values", 1);
                     // Успешное обновление
                     return Json(new { success = true });
                 }
                 catch (Exception ex)
                 {
+                    _logHelper.LogAction((int)userId, "Failed EditReq", $"user with id:{userId} can not edit his req values", 2);
                     // Логируем ошибку (по возможности используйте более продвинутое логирование)
                     return Json(new { success = false, message = ex.Message });
                 }
             }
-
-            // Если модель не валидна
-            return Json(new { success = false, message = "Invalid data" });
+            return View(model);
         }
        
-        public string GetUsersInfo() // метод для отображения подробно req
+        
+        public IActionResult DeleteRequest(int RequestId) // метод для блокирования пользователя
         {
-            try
-            {
-                Request.Form.TryGetValue("val", out var val);
-                int.TryParse(val, out int userId);//чтобы не было ошибок
-                var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
-                oracleConnection.Open(); //открываем наше соеденение
-
-                var oracleCommand = oracleConnection.CreateCommand();
-                oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                oracleCommand.CommandText = "GET_REQUEST_BY_ID";
-                oracleCommand.Parameters.Add("RETURN", OracleDbType.Clob).Direction = ParameterDirection.ReturnValue;
-                oracleCommand.Parameters.Add("P_REQUEST_ID", OracleDbType.Int32).Value = userId;
-                oracleCommand.Parameters.Add("p_user_id", OracleDbType.Int32).Value = _user_id;
-
-                oracleCommand.ExecuteNonQuery();
-
-                return ((Oracle.ManagedDataAccess.Types.OracleClob)(oracleCommand.Parameters["RETURN"].Value)).Value;
-                //для закрытия connection
-                //oracleCommand.Dispose();
-                //oracleConnection.Close();
-                //oracleConnection.Dispose();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return string.Empty;
-        }
-        public IActionResult DeleteReq(int id) // метод для блокирования пользователя
-        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
             try
             {
                 using (var oracleConnection = new OracleConnection(_connectionString))
@@ -235,68 +266,45 @@ namespace WebApplication1.Controllers
                     {
                         oracleCommand.CommandType = System.Data.CommandType.StoredProcedure;
                         oracleCommand.CommandText = "DELETE_REQ";
-                        oracleCommand.Parameters.Add("P_REQUEST_ID", OracleDbType.Int32).Value = id;
+                        oracleCommand.Parameters.Add("P_REQUEST_ID", OracleDbType.Int32).Value = RequestId;
 
                         oracleCommand.ExecuteNonQuery();
                     }
                 }
-
+                _logHelper.LogAction((int)userId, "DeleteRequest", $"user with id:{userId} deleting Req", 1);
                 // Редирект на страницу, например, список пользователей
-                return RedirectToAction("AllReq"); // Или на другую страницу
+                return RedirectToAction("RequestsList"); // Или на другую страницу
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-
+                _logHelper.LogAction((int)userId, "Failed DeleteRequest", $"user with id:{userId} can not deleting Req", 2);
                 // В случае ошибки можно вернуть представление с ошибкой или другую логику
                 return View("Error"); // Показываем страницу с ошибкой
             }
         }
 
-        public IActionResult Privacy(CalculatorModel calculatorModel)
+
+        public IActionResult DetailRequest()
         {
-
-            if (calculatorModel.Operation == "plus")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber + calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "minus")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber - calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "umn")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber * calculatorModel.SecondNumber;
-            }
-            else if (calculatorModel.Operation == "delete")
-            {
-                calculatorModel.Result = calculatorModel.FirstNumber / calculatorModel.SecondNumber;
-            }
-
-            return Content($"Your result: {calculatorModel.Result}");
+            return View("Views/User/DetailRequest.cshtml");
         }
-
-        public IActionResult Requestes()
-        {
-            return View("Views/User/RequestDetails.cshtml");
-        }
-        public IActionResult EditRequests()
+        public IActionResult EditRequest()
         {
             return View("Views/User/EditRequest.cshtml");
         }
         
         public IActionResult Privacy() => View();
 
-        public IActionResult CreatesReq()
+        public IActionResult AddRequest()
         {
-            return View("Views/User/CreateReq.cshtml");
+            return View("Views/User/CreateRequest.cshtml");
         }
-        public IActionResult AllReq()
+        public IActionResult RequestsList()
         {
-            return View("Views/User/AllRequest.cshtml");
+            return View("Views/User/RequestsList.cshtml");
         }
 
-        public IActionResult CreatesReqVal()
+        public IActionResult AddReqValues()
         {
             return View("Views/User/CreateReqVal.cshtml");
         }
@@ -305,20 +313,28 @@ namespace WebApplication1.Controllers
         public JsonResult GetFormData() //выборка данных для dropdown
         {
             var formData = new FormDataViewModel();
+            using (var oracleConnection = new OracleConnection(_connectionString)) { 
 
-            var oracleConnection = new OracleConnection(_connectionString); //создаем обьект с переменной _connectionString
+           
             oracleConnection.Open(); //открываем наше соеденение
 
-            using (var command = new OracleCommand("GET_FORM_DATA", oracleConnection))
+            using (var command = new OracleCommand("USER_GET_FORM_DATA", oracleConnection))
             {
                 command.CommandType = CommandType.StoredProcedure;
 
-                // Параметры для категорий
-                var categoryCursor = command.Parameters.Add("p_categories", OracleDbType.RefCursor);
+                    // Добавляем параметр user_id
+                    var userIdParam = command.Parameters.Add("p_user_id", OracleDbType.Int32);
+                    userIdParam.Value = HttpContext.Session.GetInt32("UserId");
+
+                    // Добавляем параметр user_id
+                    var CategoryParam = command.Parameters.Add("p_category_id", OracleDbType.Int32);
+                    CategoryParam.Value = 2;
+                    // Параметры для категорий
+                    var categoryCursor = command.Parameters.Add("p_categories", OracleDbType.RefCursor);
                 categoryCursor.Direction = ParameterDirection.Output;
 
-                // Параметры для пользователей
-                var userCursor = command.Parameters.Add("p_users", OracleDbType.RefCursor);
+                    // Параметры для пользователей
+                    var userCursor = command.Parameters.Add("p_users", OracleDbType.RefCursor);
                 userCursor.Direction = ParameterDirection.Output;
 
                 // Параметры для полей
@@ -329,7 +345,9 @@ namespace WebApplication1.Controllers
                 var field_typeCursor = command.Parameters.Add("p_field_types", OracleDbType.RefCursor);
                     field_typeCursor.Direction = ParameterDirection.Output;
 
-                var requestCursor = command.Parameters.Add("p_requests", OracleDbType.RefCursor);
+                    
+
+                    var requestCursor = command.Parameters.Add("p_requests", OracleDbType.RefCursor);
                     requestCursor.Direction = ParameterDirection.Output;
 
                 command.ExecuteNonQuery();
@@ -398,7 +416,7 @@ namespace WebApplication1.Controllers
                     }
                 }
             }
-
+                }
 
             return Json(formData);
         }

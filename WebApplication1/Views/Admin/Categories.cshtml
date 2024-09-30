@@ -1,12 +1,12 @@
 ﻿@{
-    ViewBag.Title = "AllRequest";
+    ViewBag.Title = "AllCategories";
     Layout = "/Views/Shared/Admin_Layout.cshtml";
 }
 <head>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h2>Request Details</h2>
+    <h2>AllCategory</h2>
     <div id="userInfoContainer"></div> 
     
     <table class="table table-bordered">
@@ -19,15 +19,21 @@
             <!-- Динамические строки -->
         </tbody>
     </table>
-
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("CategoryValues", "Admin")" class="btn btn-primary col-6 mx-auto">Category Values</a>
+    </div>
+    <br />
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("AddCategories", "Admin")" class="btn btn-success col-6 mx-auto">Create Category</a>
+    </div>
     <script>
         $(document).ready(function () {
             $.ajax({
-                url: 'AllRequest',
+                url: 'GetCategories',
                 contentType: 'application/x-www-form-urlencoded',
                 success: function (data) {
+                    console.log(data);
                     var jsonArray = JSON.parse(data);
-                    console.log(jsonArray);
 
                     const tableHeader = document.getElementById('tableHeader');
                     const tableBody = document.getElementById('tableBody');
@@ -37,50 +43,48 @@
 
                     if (jsonArray.length > 0) {
                         const headers = Object.keys(jsonArray[0]);
-                        console.log("headers:", headers);
 
-                        // Создаем заголовки таблицы
+                        // Создание заголовков таблицы
                         headers.forEach(header => {
                             const th = document.createElement('th');
                             th.textContent = header;
                             tableHeader.appendChild(th);
                         });
 
-                        // Добавляем заголовок для кнопки Block
-                        const actionTh = document.createElement('th');
-                        actionTh.textContent = 'Actions';
-                        tableHeader.appendChild(actionTh);
-
-                        // Создаем строки таблицы
+                        // Заполнение таблицы данными
                         jsonArray.forEach(jsonObject => {
                             const tr = document.createElement('tr');
 
                             headers.forEach(header => {
                                 const td = document.createElement('td');
 
-                                // Если поле - ICON, то создаём элемент <i>
-                                if (header === 'ICON') {
+                                // Логика для поля CATEGORY_ID
+                                if (header === "CATEGORY_ID") {
+                                    const a = document.createElement('a');
+                                    a.href = 'EditCategories?id=' + jsonObject[header];
+                                    a.className = "link-dark";
+                                    a.textContent = jsonObject[header];
+
+                                    // Сохранение записи в sessionStorage при клике
+                                    a.onclick = function () {
+                                        sessionStorage.setItem('selectedRecord', JSON.stringify(jsonObject));
+                                    };
+
+                                    td.appendChild(a);
+                                }
+                                // Логика для поля CATEGORY_ICON
+                                else if (header === 'CATEGORY_ICON') {
                                     const icon = document.createElement('i');
                                     icon.className = jsonObject[header]; // Устанавливаем значение как класс иконки
                                     td.appendChild(icon);
-                                } else {
-                                    td.textContent = jsonObject[header]; // Для всех остальных полей
+                                }
+                                // Для всех остальных полей
+                                else {
+                                    td.textContent = jsonObject[header];
                                 }
 
                                 tr.appendChild(td);
                             });
-
-                            // Добавляем колонку с кнопкой Block
-                            const actionTd = document.createElement('td');
-                            const blockButton = document.createElement('a');
-                            blockButton.textContent = 'Block';
-                            blockButton.className = 'btn btn-danger';
-
-                            // Формируем ссылку для блокировки пользователя
-                            blockButton.href = `/Admin/ProcedureBlockUser?id=${jsonObject["USER_ID"]}`;
-
-                            actionTd.appendChild(blockButton);
-                            tr.appendChild(actionTd);
 
                             tableBody.appendChild(tr);
                         });

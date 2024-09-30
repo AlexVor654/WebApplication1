@@ -1,0 +1,87 @@
+﻿@model WebApplication1.Models.UserModel
+@{
+    ViewBag.Title = "Create User";
+    Layout = "/Views/Shared/Admin_Layout.cshtml";
+}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-4">
+            <form id="createUserForm">
+                <h2>Create a new User</h2>
+                <div class="form-group">
+                    <label for="Username" class="form-label">Username:</label>
+                    <input type="text" id="Username" class="form-control" name="Username" required />
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">FIRST_NAME:</label>
+                    <input type="text" id="FIRST_NAME" class="form-control" name="FIRST_NAME" required />
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label">LAST_NAME:</label>
+                    <input type="text" class="form-control" id="LAST_NAME" name="LAST_NAME" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="username" class="form-label">Email:</label>
+                    <input type="email" class="form-control" id="Email" name="Email" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Phone number:</label>
+                    <input type="text" class="form-control" id="PHONE" name="PHONE" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">User Password:</label>
+                    <input type="password" class="form-control" id="PASSWD" name="PASSWD" required />
+                </div>
+                <div class="d-grid gap-2 col-6 mx-auto">
+                <br />
+                    <button type="submit" asp-area="" class="btn btn-success">Send</button>
+        </div>
+</form>
+        </div>
+    </div>
+</div>
+<br />
+<div class="d-flex justify-content-between">
+    <a href="@Url.Action("Users", "Admin")" class="btn btn-secondary mx-auto">All User</a>
+</div>
+
+<script>
+    // Логирование данных формы при отправке
+    $('#createUserForm').on('submit', function (event) {
+        event.preventDefault(); // Останавливаем отправку формы, чтобы проверить данные
+
+        var formData = {
+            Username: $('#Username').val(),
+            FIRST_NAME: $('#FIRST_NAME').val(),
+            LAST_NAME: $('#LAST_NAME').val(),
+            Email: $('#Email').val(),
+            PHONE: $('#PHONE').val(),
+            PASSWD: $('#PASSWD').val()
+        };
+
+        console.log('Form data:', formData);
+
+        // Отправка формы через AJAX
+        $.ajax({
+                url: 'CreateUser',
+            method: 'POST',
+            data: formData,
+            success: function (response) {
+                // Обработка успешного ответа
+                alert('Request sent successfully!');
+            },
+            error: function () {
+                // Обработка ошибки
+                alert('Error sending request.');
+            }
+        });
+    });
+</script>
+</body>

@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Session;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,14 @@ var connectionString = builder.Configuration.GetConnectionString("WebApplication
 builder.Services.AddDbContext<WebApplication1Context>(options => options.UseOracle(connectionString));
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<WebApplication1Context>();
+// Добавляем поддержку сессий
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Устанавливаем время ожидания
+    options.Cookie.HttpOnly = true; // Защита от JavaScript
+    options.Cookie.IsEssential = true; // Необходимая кука для работы сессий
+});
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -24,14 +33,24 @@ if (!app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseSession();
+
 app.UseRouting();
 
 app.UseAuthorization();
 
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action}");
+    pattern: "{controller=Auth}/{action}");
+
+app.MapControllerRoute(
+            name: "AuthController",
+            pattern: "{action}",
+            defaults: new { controller = "Auth", action = "{action}" });
+
+
+
+
 
 app.MapControllerRoute(
             name: "AdminController",
@@ -39,9 +58,7 @@ app.MapControllerRoute(
             defaults: new { controller = "Admin", action = "{action}" });
 
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=User}/{action}");
+
 
 app.MapControllerRoute(
             name: "UserController",
